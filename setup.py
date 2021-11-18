@@ -8,7 +8,6 @@ setup(
   author="Dirk Groeneveld",
   author_email="dirkg@allenai.org",
   packages=find_packages(),
-  py_modules=['pipette'],
   install_requires=['dill'],
   python_requires='>=3.6'
 )
