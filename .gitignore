@@ -3,3 +3,6 @@
 /*.egg-info/
 /build/
 /dist/
+/bettermap/__pycache__/
+/.idea
+*.swp
