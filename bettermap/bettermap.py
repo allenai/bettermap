@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import io
-from typing import *
 import sys
 from concurrent.futures import ThreadPoolExecutor
 import collections
@@ -8,12 +7,14 @@ import collections
 import itertools
 import multiprocessing as mp
 import multiprocessing.connection
+from typing import Iterable, List, Optional, Any, Dict
+
 import dill
 
 from queue import Queue
 from threading import Thread
 
-def threaded_generator(g, maxsize:int = 16):
+def threaded_generator(g, maxsize: int = 16):
     q = Queue(maxsize=maxsize)
 
     sentinel = object()
@@ -30,6 +31,7 @@ def threaded_generator(g, maxsize:int = 16):
 
     yield from iter(q.get, sentinel)
 
+
 def slices(n: int, i: Iterable) -> Iterable[List]:
     i = iter(i)
     while True:
@@ -39,12 +41,14 @@ def slices(n: int, i: Iterable) -> Iterable[List]:
         else:
             break
 
+
 def window(seq: Iterable, n:int = 2) -> Iterable[List]:
     win = collections.deque(maxlen=n)
     for e in seq:
         win.append(e)
         if len(win) == n:
             yield list(win)
+
 
 def map_per_process(
     fn,
@@ -133,6 +137,7 @@ def map_per_process(
             if process.is_alive():
                 process.terminate()
 
+
 def ordered_map_per_process(
     fn,
     input_sequence: Iterable,
@@ -163,6 +168,7 @@ def ordered_map_per_process(
         else:
             items_in_wait.append(item)
 
+
 def ordered_map_per_thread(
     fn,
     input_sequence: Iterable,
@@ -175,6 +181,7 @@ def ordered_map_per_thread(
     for future in input_sequence:
         yield future.result()
     executor.shutdown()
+
 
 def map_in_chunks(
     fn,
@@ -192,6 +199,7 @@ def map_in_chunks(
         serialization_items=serialization_items)
     for processed_chunk in processed_chunks:
         yield from processed_chunk
+
 
 def ordered_map_in_chunks(
     fn,
