@@ -43,11 +43,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Setup Python environment
+        run: pip install -r dev-requirements.txt
 
       - name: ${{ matrix.task.name }}
-        run: |
-          pip install -r dev-requirements.txt
-          ${{ matrix.task.run }}
+        run: ${{ matrix.task.run }}
 
       - name: Upload package distribution files
         if: matrix.task.name == 'Build'
