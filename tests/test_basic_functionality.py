@@ -16,7 +16,7 @@ def test_map_per_process():
 
 
 def test_ordered_map_per_process():
-    result = list(bettermap.map_per_process(f, _INPUT))
+    result = list(bettermap.ordered_map_per_process(f, _INPUT))
     assert result == _EXPECTED
 
 
