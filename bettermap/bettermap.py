@@ -47,7 +47,7 @@ def slices(n: int, i: Iterable) -> Iterable[List]:
             break
 
 
-def window(seq: Iterable, n:int = 2) -> Iterable[List]:
+def window(seq: Iterable, n: int = 2) -> Iterable[List]:
     win = collections.deque(maxlen=n)
     for e in seq:
         win.append(e)
