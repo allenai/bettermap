@@ -1,0 +1,14 @@
+mypy
+
+# Needed for packaging and uploading to PyPi
+twine>=1.11.0
+setuptools
+wheel
+
+# For parsing and comparing version numbers.
+packaging
+
+# running tests
+pytest>=6.2.5
+pytest-sphinx
+flaky
