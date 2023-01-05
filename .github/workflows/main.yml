@@ -36,7 +36,7 @@ jobs:
         include:
           - task:
               name: Type check
-              run: mypy bettermap/
+              run: mypy --ignore-missing-imports bettermap/
             python: '3.10'
 
     steps:

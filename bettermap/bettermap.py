@@ -2,13 +2,12 @@
 import io
 import sys
 from concurrent.futures import ThreadPoolExecutor
-import collections
 
 import itertools
 import multiprocessing as mp
-import multiprocessing.connection
+from multiprocessing.connection import Connection
 from multiprocessing.context import ForkProcess
-from typing import Iterable, List, Optional, Any, Dict
+from typing import Iterable, List, Optional, Any, Dict, Tuple
 
 import dill
 
@@ -20,7 +19,7 @@ mpctx = mp.get_context("fork")
 
 
 def threaded_generator(g, maxsize: int = 16):
-    q = Queue(maxsize=maxsize)
+    q: Queue = Queue(maxsize=maxsize)
 
     sentinel = object()
 
@@ -47,14 +46,6 @@ def slices(n: int, i: Iterable) -> Iterable[List]:
             break
 
 
-def window(seq: Iterable, n: int = 2) -> Iterable[List]:
-    win = collections.deque(maxlen=n)
-    for e in seq:
-        win.append(e)
-        if len(win) == n:
-            yield list(win)
-
-
 def map_per_process(
     fn,
     input_sequence: Iterable,
@@ -74,8 +65,8 @@ def map_per_process(
             def persistent_load(self, pid):
                 return serialization_items[pid]
     else:
-        MapPickler = dill.Pickler
-        MapUnpickler = dill.Unpickler
+        MapPickler = dill.Pickler  # type: ignore
+        MapUnpickler = dill.Unpickler  # type: ignore
     def pickle(o: Any) -> bytes:
         with io.BytesIO() as buffer:
             pickler = MapPickler(buffer)
@@ -86,10 +77,10 @@ def map_per_process(
             unpickler = MapUnpickler(buffer)
             return unpickler.load()
 
-    pipeno_to_pipe: Dict[int, multiprocessing.connection.Connection] = {}
+    pipeno_to_pipe: Dict[int, Connection] = {}
     pipeno_to_process: Dict[int, ForkProcess] = {}
 
-    def process_one_item(send_pipe: multiprocessing.connection.Connection, item):
+    def process_one_item(send_pipe: Connection, item):
         try:
             processed_item = fn(item)
         except Exception as e:
@@ -99,7 +90,7 @@ def map_per_process(
             send_pipe.send((pickle(processed_item), None))
         send_pipe.close()
 
-    def yield_from_pipes(pipes: List[multiprocessing.connection.Connection]):
+    def yield_from_pipes(pipes: List[Connection]):
         for pipe in pipes:
             result, error = pipe.recv()
             pipeno = pipe.fileno()
@@ -129,13 +120,13 @@ def map_per_process(
             timeout = 0 if len(pipeno_to_process) < parallelism else None
             # If we have fewer processes going than we have CPUs, we just pick up the values
             # that are done. If we are at the process limit, we wait until one of them is done.
-            ready_pipes = multiprocessing.connection.wait(pipeno_to_pipe.values(), timeout=timeout)
-            yield from yield_from_pipes(ready_pipes)
+            ready_pipes = mp.connection.wait(pipeno_to_pipe.values(), timeout=timeout)
+            yield from yield_from_pipes(ready_pipes)  # type: ignore
 
         # yield the rest of the items
         while len(pipeno_to_process) > 0:
-            ready_pipes = multiprocessing.connection.wait(pipeno_to_pipe.values(), timeout=None)
-            yield from yield_from_pipes(ready_pipes)
+            ready_pipes = mp.connection.wait(pipeno_to_pipe.values(), timeout=None)
+            yield from yield_from_pipes(ready_pipes)  # type: ignore
 
     finally:
         for process in pipeno_to_process.values():
@@ -158,7 +149,7 @@ def ordered_map_per_process(
         serialization_items=serialization_items)
 
     expected_index = 0
-    items_in_wait = []
+    items_in_wait: List[Tuple[int, Any]] = []
     for item in results_with_index:
         index, result = item
         if index == expected_index:
