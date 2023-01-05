@@ -29,7 +29,7 @@ def parse_requirements_file(path):
 
 setup(
     name='bettermap',
-    version='1.1.0',
+    version='1.2.0',
     description="Parallelized drop-in replacements for Python's map function",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
