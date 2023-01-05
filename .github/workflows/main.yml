@@ -7,22 +7,20 @@ concurrency:
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
     tags:
       - 'v*.*.*'
 
 env:
-  # Change this to invalidate existing cache.
-  CACHE_PREFIX: v1
   PYTHON_PATH: ./
 
 jobs:
   checks:
     name: Python ${{ matrix.python }} - ${{ matrix.task.name }}
-    runs-on: [self-hosted, CPU-only]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -38,22 +36,17 @@ jobs:
         include:
           - task:
               name: Type check
-              run: mypy .
+              run: mypy --ignore-missing-imports bettermap/
             python: '3.10'
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Setup Python environment
-        uses: ./.github/actions/setup-venv
-        with:
-          python-version: ${{ matrix.python }}
-          cache-prefix: ${{ env.CACHE_PREFIX }}
+        run: pip install -r requirements.txt -r dev-requirements.txt
 
       - name: ${{ matrix.task.name }}
-        run: |
-          . .venv/bin/activate
-          ${{ matrix.task.run }}
+        run: ${{ matrix.task.run }}
 
       - name: Upload package distribution files
         if: matrix.task.name == 'Build'
@@ -61,12 +54,6 @@ jobs:
         with:
           name: package
           path: dist
-
-      - name: Clean up
-        if: always()
-        run: |
-          . .venv/bin/activate
-          pip uninstall -y bettermap
 
   release:
     name: Release
@@ -104,7 +91,7 @@ jobs:
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           prerelease: ${{ contains(env.TAG, 'rc') }}
           files: |
