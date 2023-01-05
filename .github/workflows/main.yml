@@ -36,7 +36,7 @@ jobs:
         include:
           - task:
               name: Type check
-              run: mypy .
+              run: mypy bettermap/
             python: '3.10'
 
     steps:
